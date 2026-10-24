@@ -20,9 +20,12 @@
   header p { color: #9aa7c7; margin-top: 6px; font-size: 14px; }
   #updated { color: #6f7da3; font-size: 12px; margin-top: 4px; }
 
-  .galaxy { position: relative; z-index: 1; width: min(92vw, 760px); aspect-ratio: 1;
-    margin: 8px auto 0; }
-  .orbit { position: absolute; left: 50%; top: 50%; border-radius: 50%;
+  .galaxy { position: relative; z-index: 1; width: min(92vw, 62vh, 700px); aspect-ratio: 1;
+    margin: 8px auto 0; background: transparent; }
+  .spokes { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+  .spokes line { stroke-width: 1.6; opacity: .75; }
+  .spokes line.dim { opacity: .22; }
+  .orbit { position: absolute; left: 50%; top: 50%; border-radius: 50%; background: transparent;
     border: 1.5px solid rgba(150,170,220,.28); transform: translate(-50%,-50%); }
   .orbit.off { border-style: dashed; border-color: rgba(150,170,220,.18); }
   .orbit.o1 { width: 46%; height: 46%; }
@@ -54,9 +57,9 @@
   @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
   .planet .ring::after { content: ""; position: absolute; top: -4px; left: 50%;
     width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px #fff; }
-  .planet b { display: block; margin-top: 8px; font-size: 15px; }
-  .planet .st { font-size: 11px; margin-top: 2px; }
-  .planet .num { font-size: 12px; color: #ffd479; margin-top: 3px; font-weight: 600; }
+  .planet b { display: block; margin-top: 8px; font-size: 15px; text-shadow: 0 1px 6px #000, 0 0 2px #000; }
+  .planet .st { font-size: 11px; margin-top: 2px; text-shadow: 0 1px 6px #000, 0 0 2px #000; }
+  .planet .num { font-size: 12px; color: #ffd479; margin-top: 3px; font-weight: 600; text-shadow: 0 1px 6px #000, 0 0 2px #000; }
   .planet.offline { opacity: .45; filter: grayscale(1); }
   .planet.offline .avatar, .planet.offline .ring { animation-play-state: paused; }
 
@@ -112,6 +115,18 @@
 </header>
 
 <div class="galaxy" id="galaxy">
+  <svg class="spokes" viewBox="0 0 100 100" aria-hidden="true">
+    <defs>
+      <marker id="ah-lily" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#e8a317"/></marker>
+      <marker id="ah-misty" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1899c2"/></marker>
+      <marker id="ah-friday" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#7b3fc4"/></marker>
+      <marker id="ah-chaya" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1f9d55"/></marker>
+    </defs>
+    <line id="sp-lily" x1="50" y1="50" x2="50" y2="8" stroke="#e8a317" marker-end="url(#ah-lily)"/>
+    <line id="sp-misty" x1="50" y1="50" x2="88" y2="46" stroke="#1899c2" marker-end="url(#ah-misty)"/>
+    <line id="sp-friday" x1="50" y1="50" x2="50" y2="92" stroke="#7b3fc4" marker-end="url(#ah-friday)"/>
+    <line id="sp-chaya" x1="50" y1="50" x2="12" y2="46" stroke="#1f9d55" marker-end="url(#ah-chaya)"/>
+  </svg>
   <div class="orbit o1"></div>
   <div class="orbit o2"></div>
   <div class="orbit o3"></div>
@@ -222,6 +237,8 @@ Offline planets go grey and their orbit turns dashed.</p>
         st.style.color = a.online ? '#35d07f' : '#8a93ad';
         num.textContent = (a.queued ?? 0) + ' queued';
         pl.classList.toggle('offline', !a.online);
+        const sp = document.getElementById('sp-' + key);
+        if (sp) sp.classList.toggle('dim', !a.online);
         if (key === 'chaya') document.getElementById('orbit-chaya').classList.toggle('off', !a.online);
         const card = document.createElement('div');
         card.className = 'card';
