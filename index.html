@@ -189,13 +189,20 @@ Offline planets go grey and their orbit turns dashed.</p>
       }
       let data;
       if (liveUrl) {
-        const res = await fetch(liveUrl + '/live/status', { cache: 'no-store' });
-        data = await res.json();
-        for (const key of Object.keys(data.agents || {})) {
-          if (META[key]) { data.agents[key].name = META[key].name; data.agents[key].role = META[key].role; }
+        try {
+          const res = await fetch(liveUrl + '/live/status', { cache: 'no-store' });
+          if (!res.ok) throw new Error('live status ' + res.status);
+          data = await res.json();
+          for (const key of Object.keys(data.agents || {})) {
+            if (META[key]) { data.agents[key].name = META[key].name; data.agents[key].role = META[key].role; }
+          }
+          data.tasksInFlight = Object.values(data.agents || {}).reduce((n, a) => n + (a.queued || 0), 0) || 1;
+          document.getElementById('updated').textContent = 'LIVE · ' + new Date().toLocaleString();
+        } catch (e) {
+          liveUrl = null; // live server unreachable: fall back to status.json
+          const res = await fetch('status.json', { cache: 'no-store' });
+          data = await res.json();
         }
-        data.tasksInFlight = Object.values(data.agents || {}).reduce((n, a) => n + (a.queued || 0), 0) || 1;
-        document.getElementById('updated').textContent = 'LIVE · ' + new Date().toLocaleString();
       } else {
         const res = await fetch('status.json', { cache: 'no-store' });
         data = await res.json();
