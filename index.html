@@ -169,12 +169,39 @@ Offline planets go grey and their orbit turns dashed.</p>
     }
   }
 
+  const META = {
+    lily:   { name: 'Lily',   role: 'Visionary & Strategist' },
+    misty:  { name: 'Misty',  role: 'Scout & Intel' },
+    friday: { name: 'Friday', role: 'Scans & Follow-ups' },
+    chaya:  { name: 'Chaya',  role: 'Realizer (PC)' },
+  };
+  let liveUrl = null, liveChecked = false;
+
   async function load() {
     try {
-      const res = await fetch('status.json', { cache: 'no-store' });
-      const data = await res.json();
+      if (!liveChecked) {
+        liveChecked = true;
+        try {
+          const lc = await fetch('live.json', { cache: 'no-store' });
+          const lj = await lc.json();
+          if (lj.url) liveUrl = lj.url.replace(/\/+$/, '');
+        } catch (e) { /* no live server configured yet */ }
+      }
+      let data;
+      if (liveUrl) {
+        const res = await fetch(liveUrl + '/live/status', { cache: 'no-store' });
+        data = await res.json();
+        for (const key of Object.keys(data.agents || {})) {
+          if (META[key]) { data.agents[key].name = META[key].name; data.agents[key].role = META[key].role; }
+        }
+        data.tasksInFlight = Object.values(data.agents || {}).reduce((n, a) => n + (a.queued || 0), 0) || 1;
+        document.getElementById('updated').textContent = 'LIVE · ' + new Date().toLocaleString();
+      } else {
+        const res = await fetch('status.json', { cache: 'no-store' });
+        data = await res.json();
+      }
       window.__data = data;
-      document.getElementById('updated').textContent = 'Last update: ' + (data.updated || '');
+      if (!liveUrl) document.getElementById('updated').textContent = 'Last update: ' + (data.updated || '');
       document.getElementById('server-name').textContent = data.server?.active || 'PC Relay';
       const cards = document.getElementById('cards');
       cards.innerHTML = '';
@@ -202,7 +229,7 @@ Offline planets go grey and their orbit turns dashed.</p>
     } catch (e) { /* keep last render */ }
   }
   load();
-  setInterval(load, 60000);
+  setInterval(load, 20000);
 </script>
 </body>
 </html>
